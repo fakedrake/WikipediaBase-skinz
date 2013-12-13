@@ -15,7 +15,7 @@
 ** Architecture
    Here is an overview of it
 
-   #+CAPTION: What am I doing with my life?
+   #+CAPTION: On he thin line between writing dot code and procrastination
    #+LABEL:   Module Diagram
    [[./wikipediabase.png]]
 
