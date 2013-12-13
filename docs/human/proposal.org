@@ -103,4 +103,5 @@
     And besides readthedocs.com (see github readme) you may find
     documentation (that is not automatically updated) at [[http://people.csail.mit.edu/cperivol/wikipediabase/][my CSAIL page]].
 
-    Also you may find the source of this document at the github repo.
+    Also you may find the org source code of this document at the
+    [[https://github.com/fakedrake/WikipediaBase/tree/master/docs/human][github repository]].
