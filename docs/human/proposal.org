@@ -1,0 +1,106 @@
+#+LaTeX_CLASS: fakedrake-org-article
+#+TITLE: WikipediaBase
+#+AUTHOR: Chris Perivolaropulos
+
+* WikipediaBase reimplemetation
+** Goals
+   - Easy to maintain and extend.
+   - Reduce complextity of the core of wb
+   - Multiple front ends (eg. cli, RPC, telnet, api)
+   - Multiple backends (wikipedia.org, local wikipedia, xml dump,
+     Alvaro's annotations, direct MySQL database json etc)
+   - Back-end combination
+   - Modular way of article feature extraction
+
+** Architecture
+   Here is an overview of it
+
+   #+CAPTION: What am I doing with my life?
+   #+LABEL:   Module Diagram
+   [[./wikipediabase.png]]
+
+*** Front end function calls
+
+    Load all possible function calls to a data-structure to be looked
+    up by the front end. This may be done with decorators (Python) or
+    macros (lisp).
+
+*** Knowledge bases
+    The core of the core of the system for the time being will be the
+    =KnowledgeBase= class with a pluggable implementation. We will
+    implement a default and later we can subclass that to tweak the
+    core behavior of obtaining the data sources. To obtain attributes
+    the KnowledgeBase will use a priority list of attribute resolvers
+    functions that given the desired attribute name, the article name
+    and possibly some metadata (like information on the class of the
+    article) will yield the value of the attribute or no result in
+    which case KnowledgeBase will go to the next result.
+
+*** Attribute Resolvers
+    For starters 2 =AttributeResolver=s must be implemented.
+
+    - One where the supported attributes are hardcoded and mapped to
+      function that extract their values from the article.
+    - One that just supports the attributes given in the infobox of the
+      article.
+
+    It is important to make the resolvers (and any component for that
+    matter) as simple as possible, distributing the features to many
+    resolvers.
+
+    A similar tecnique can be used to find lists of attributes based
+    on article. In fact it would be nice to have both functionalities
+    in the same object since the two features can share a lot of code.
+
+** Implementation
+*** Persistence and computation time
+    A question that kept coming up is weather we want features to be
+    generated in compile time or run time. To do that we can have a
+    =AttributeCacher= object be able to generate sql tables of the
+    form
+
+    | Article id | Attribute | Value |
+
+    Using the attribute resolvers and thus populating a table. The
+    same object could be able to act as an =AttributeResolver= for the
+    knowledge base to retrieve these values. This way we may be able
+    to configure the priority of the precompiled results.
+
+*** Language (spoiler alert: python)
+    I began implementing everything in Clojure which is in JVM so we
+    have nice library support, it is lispy which is always a good
+    thing and deals very well with laziness in data, fully supports
+    object orientation by design and is awesome for api building and
+    dynamic code which would help with the whole extensibility notion
+    I have been supporting.
+
+    All this however is undermined by the fact that not many people
+    are very fluent in lisp and even fewer are keen on clojure, and
+    since, as Sue pointed out, there is a flow of people through the
+    lab, the best way to take advantage of their time in the long term
+    and draw their attention is to start moving things to python. And
+    thus the history of lisp machines repeats itself in the small
+    scale.
+
+*** Timeline
+    | Task           | Est.   |
+    |----------------+--------|
+    | Middleware     | 2 days |
+    | Front end      | 1 days |
+    | Knowledge base | 3 days |
+
+    Now double those for general debugging and the inevitable
+    encountering of Dumb Ideas(TM) that now seem smart.
+
+*** Repository
+    You may find a git repository (and a few extras) for the project
+    on [[http://github.com/fakedrake/WikipediaBase][github]]. You may get the code by running
+
+    #+BEGIN_EXAMPLE
+    git clone https://github.com/fakedrake/WikipediaBase.git
+    #+END_EXAMPLE
+
+    And besides readthedocs.com (see github readme) you may find
+    documentation (that is not automatically updated) at [[http://people.csail.mit.edu/cperivol/wikipediabase/][my CSAIL page]].
+
+    Also you may find the source of this document at the github repo.

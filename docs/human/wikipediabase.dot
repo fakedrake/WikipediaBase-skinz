@@ -1,0 +1,67 @@
+digraph WikipediaBase
+{
+	rankdir=BT;
+	clusterrank=local
+	subgraph clusterRuntime {
+		rankdir=BT;
+		subgraph FrontEnd
+		{
+			style=filled;
+			color=red;
+			node[shape=box, style=filled, color=lightblue];
+			sexp[label="Sexp interface"];
+			srv[label="Server"];
+			rcp[label="RCP"];
+			label="Front End"
+		}
+
+		node[shape=box, style=filled]
+		ifns[label="Available Functions", color=darkolivegreen1]
+
+		kb[shape=record, style=filled, fillcolor=khaki1, label="Knowledge Base|{get | get-classes | get-attributes}"]
+
+		subgraph AttributeResolvers
+		{
+			style=filled;
+			color=red;
+			node[shape=box, style=filled, color=lightpink];
+			r1[label="Fixed attributes list"];
+			r2[label="Infobox attributes"];
+			r3[label="Precompiled Database"];
+			r4[label="Something else"];
+			label="Attribute Resolvers"
+		}
+
+		dp[label="Data provider"];
+
+		subgraph sources {
+			node[style=rounded, shape=octagon]
+			worg[label="wikipedia.org"]
+			wloc[label="CSAIL wikipedia"]
+			dbloc[label="Local Database/Attribute Cache"]
+		}
+	}
+
+	subgraph preprocessor {
+		rank=min
+		ppc[label="Attribute Preprocessor"];
+        }
+	// Connections
+	ifns->sexp;
+	ifns->srv;
+	ifns->rcp;
+
+	kb->ifns;
+	dp->r1->kb;
+	dp->r2->kb;
+	dp->r3->kb;
+	dp->r4->kb;
+
+	worg->dp;
+	wloc->dp;
+	dbloc->dp;
+
+	r1->ppc->dbloc;
+	r2->ppc;
+	kb->ppc;
+}
