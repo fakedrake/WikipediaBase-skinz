@@ -31,6 +31,7 @@ setup(
     package_dir={'wikipediabase': 'wikipediabase'},
     include_package_data=True,
     install_requires=[
+        'sexpdata',
     ],
     license="BSD",
     zip_safe=False,
