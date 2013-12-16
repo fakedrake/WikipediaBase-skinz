@@ -8,7 +8,10 @@ test_skin
 Tests for `skin` module.
 """
 
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from wikipediabase import skin
 
