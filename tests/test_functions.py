@@ -21,7 +21,7 @@ def addone(x):
 class TestFunctions(unittest.TestCase):
 
     def setUp(self):
-        self.fns = functions.WBFunctionsSkin()
+        self.fns = functions.FunctionSkin()
         self.fns.add_function(addone)
 
     def test_addition(self):

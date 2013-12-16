@@ -159,6 +159,14 @@ class Skin(object):
         self.dumper = dumper
 
 
+    def set_parent(self, parent):
+        """
+        Set the dumper.
+        """
+
+        self.parent_skin = parent
+
+
     def set_config(self, config):
         """
         Set the read config provider.
