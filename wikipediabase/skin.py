@@ -6,6 +6,8 @@ previous. To define your project create a skin and it's configurator
 so that people can use your package independently.
 """
 
+from functools import reduce
+
 import json
 
 class JsonSkinConfig(object):
@@ -174,7 +176,7 @@ class Skin(object):
     def dump(self, parent=True, local=True, config=True):
         # Note that we do not use update or sth like that to keep the
         # amount of methods of configs to a minimum.
-        keys = self.keys()
+        keys = self.keys(parent, local, config)
         data = {}
 
         for k in set(keys):
