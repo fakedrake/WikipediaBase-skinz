@@ -17,11 +17,17 @@ class Context(object):
     def get_skin(cls, function=False):
         """
         See if this skin will do. If not create an overlay skin and return
-        it. `function` declares wether the skin can handle functions.
+        it. If you want a specific skin type use 'set_skin' and then this.
+
+        - function: Specify that you will need the skin for storing
+          functions. Will overlay a new one.
         """
 
-        if cls._skin is None or (function and not isinstance(cls._skin, FunctionSkin)):
-            return cls.set_skin(function and FunctionSkin() or Skin())
+        iscorrect = function and isinstance(cls._skin, FunctionSkin) or \
+                    cls._skin is None
+
+        if iscorrect:
+            cls.set_skin(function and FunctionSkin() or Skin())
 
         return cls._skin
 
@@ -29,7 +35,10 @@ class Context(object):
     @classmethod
     def set_skin(cls, skin, child=True):
         """
-        Add a layer overlay to skin. Set it as a child to the previous?
+        Add a layer overlay to skin.
+
+        - skin: skin to replace with
+        - child: False ignores all the so-far structure and replaces.
         """
 
         if child:
@@ -40,28 +49,25 @@ class Context(object):
 
 
     @classmethod
-    def register_function(cls, fn, name=None, domain="functions", skin=None):
+    def register_function(cls, fn, name=None, domain=None, skin=None, append=True, mapping=True):
         """
-        Register a function and bind it with a name under a certain domain.
+        Register a function under domain.
+
+        - name: Give a name to the function. Fallback to function name
+        - domain: Skin domain. Fallback to name
+        - skin: Use specific skin (not appended)
+        - append: the domain is a collection. Append to it.
+        - mapping: the domain is a mapping, ignore if not appending
         """
 
         s = skin or cls.get_skin(function=True)
-        s.append(domain, (name or fn.__name__, fn), coll_type=dict)
+        name = name or fn.__name__
+        domain = domain or name
 
-    @classmethod
-    def append_function(cls, fn, domain="attributes_generators", skin=None):
-        """
-        Append a function object to a domain.
-        """
-
-        s = skin or cls.get_skin(function=True)
-        s.append(domain, fn)
-
-    @classmethod
-    def set_function(cls, fn, domain="front_end", skin=None):
-        """
-        Set a single method to domain
-        """
-
-        s = skin or cls.get_skin(function=True)
-        s.set(domain, fn)
+        if append:
+            if mapping:
+                s.append(domain, (name, fn), coll_type=dict)
+            else:
+                s.append(domain, fn, coll_type=list)
+        else:
+            s.set(domain or name, fn)

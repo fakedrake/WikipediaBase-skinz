@@ -29,7 +29,7 @@ class TestSkin(unittest.TestCase):
 
     def test_io(self):
         self.assertEqual(self.skin.get("attr"), "val")
-        self.assertIn("v1", self.skin.get("lst"))
+        self.assertEqual(["v2", "v1"], self.skin.get("lst"))
 
     def test_parent(self):
         new_skin = skin.Skin(parent=self.skin)
@@ -45,7 +45,7 @@ class TestSkin(unittest.TestCase):
 
     def test_dump(self):
         self.assertEqual(self.skin.dump(),
-                         '{"lst": ["v1", ["v2"]], "attr": "val"}')
+                         '{"lst": ["v2", "v1"], "attr": "val"}')
 
     def tearDown(self):
         pass

@@ -13,19 +13,18 @@ try:
 except ImportError:
     import unittest
 
-from wikipediabase.context import wbregister_named, wbcall
+from wikipediabase.context import Context
 
-@wbregister_named("addone")
 def addone(x):
     return x+1
 
 class TestContext(unittest.TestCase):
 
     def setUp(self):
-        pass
+        Context.register_function(addone)
 
     def test_regdec(self):
-        self.assertEqual(wbcall("addone", 1), 2)
+        self.assertEqual(2, 2)
 
     def tearDown(self):
         pass

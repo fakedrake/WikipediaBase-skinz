@@ -1,3 +1,7 @@
+#+LaTeX_CLASS: fakedrake-org-article
+#+TITLE: Skin Infrastructure
+#+AUTHOR: Chris Perivolaropulos
+
 * Skins
   This is an overview of the skinning API and a praise to it's power
   and my intellismartness.

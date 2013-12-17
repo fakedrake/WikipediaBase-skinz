@@ -13,7 +13,7 @@ try:
 except ImportError:
     import unittest
 
-from wikipediabase import functions
+from wikipediabase import functions, skin
 
 def addone(x):
     return x+1
@@ -22,13 +22,14 @@ class TestFunctions(unittest.TestCase):
 
     def setUp(self):
         self.fns = functions.FunctionSkin()
-        self.fns.add_function(addone)
+        self.fns.set('addone', addone)
 
     def test_addition(self):
-        self.assertEqual(self.fns["addone"], ('tests.test_functions', 'addone'))
+        self.assertEqual(str(skin.Skin.get(self.fns, "addone")), "('tests.test_functions', None, 'addone')")
+        self.assertIs(self.fns['addone'], addone)
 
     def test_calling(self):
-        self.assertEqual(self.fns.call("addone", 1), 2)
+        self.assertEqual(self.fns.get("addone")(1), 2)
 
     def tearDown(self):
         pass

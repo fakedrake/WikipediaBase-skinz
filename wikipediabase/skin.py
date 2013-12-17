@@ -119,19 +119,29 @@ class Skin(object):
         configuration. Append will assume val is supposed to be an
         empty list if unset. If i cannot decide weather `attr`
         corresponds to a dict or a list `coll_type` will tell me.
+
+        Also note that this is more of a 'push' than an append.
         """
 
-        attribute = self.local.get(attr)
+        cv = self.get(attr)
 
+        # Make a val of the correct type
         try:
-            attribute.update(dict([val]))
-        except AttributeError:
-            try:
-                attribute.apply([val])
-            except AttributeError:
-                return self.set(attr, coll_type([val]))
+            rval = type(cv)([val])
+        except TypeError:
+            rval = coll_type([val])
 
-        return attribute
+        # Register to local
+        try:
+            # Assume it's a dict
+            self.local[attr].update(rval)
+        except KeyError:        # attr not in local
+            self.local[attr] = rval
+        except AttributeError:  # attr not a dict
+            self.local[attr] = rval + self.local[attr]
+        except TypeError:       # local does not exist
+            self.local = {attr: rval}
+
 
     def set(self, attr, val, depth=0):
         """
