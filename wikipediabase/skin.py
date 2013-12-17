@@ -113,21 +113,25 @@ class Skin(object):
                    parent and self.parent_skin)
                   if i]
 
-    def append(self, attr, val, dict_like=False):
+    def append(self, attr, val, coll_type=list):
         """
         Append the attribute to the value. This only affects local
         configuration. Append will assume val is supposed to be an
-        empty list if unset. If `dict_like` is True, `val` should be a
-        pair of (key, value) that is set to a dict like attr value.
+        empty list if unset. If i cannot decide weather `attr`
+        corresponds to a dict or a list `coll_type` will tell me.
         """
 
-        value = dict_like and dict([val]) or [val]
         attribute = self.local.get(attr)
 
-        if attribute is not None:
-            dict_like and attribute.update(value) or attribute.append(value)
-        else:
-            self.set(attr, value)
+        try:
+            attribute.update(dict([val]))
+        except AttributeError:
+            try:
+                attribute.apply([val])
+            except AttributeError:
+                return self.set(attr, coll_type([val]))
+
+        return attribute
 
     def set(self, attr, val, depth=0):
         """

@@ -1,0 +1,92 @@
+* Skins
+  This is an overview of the skinning API and a praise to it's power
+  and my intellismartness.
+
+** What is a skin
+   Skins is a layered model to provide an interface between modules
+   that trust each other and that are agnostic to each other's
+   internals.
+
+   A skin is a striped down dict-like object that can hold various
+   types of information. Skins are stack on each other, each skin
+   being selectively transparent. The application makes a request to
+   the topmost skin and the request is cascaded down the skin stack
+   until someone provides an answer. The =Skin= class has possible
+   sources to provide infomation. In order of precedence they are:
+
+   - Local dictionary-like structure, informed programmatically
+   - External configuration source (eg. JSON file)
+   - Lower skins (parents)
+
+   Any of these sources may be =None=. If a =Skin= believes the
+   request was for a list or dictionary, it concatenates the
+   information it finds from all the above sources.
+
+*** External Configuration and dumper
+    An external configuration source must implement:
+
+   - =get(attr)= that should yield the value of an attribute.
+   - =keys()= that will provide the available keys.
+
+   Note that the =keys()= function is mostly useful for creating
+   textual dumps of the skin which is the responsibility of the
+   =dumper=.
+
+   A dumper needs to impement =dump(dictionary)= which is a textual
+   reprresentation of /dictionary/ (like YAML, JSON, XML, etc.)
+
+   The default implementation of string saves and percieves everything
+   in the exact way that configuration source suggests. =Skin= may be
+   subcalssed to provide interface to more complex pices of
+   information. =FunctionSkin= favors saving and providing
+   functions. The rest of the system makes no assumptions about the
+   object types that each skin provides and what processing that
+   information undergoes within the skin stack.
+
+** One to rule them and in darkness bind them
+   This is all very nice and configurable. To cover all this
+   parametrization I use a class =Context= as a namespace that will
+   take care of providing default skins and will decide when a new
+   skin is to be created and of what kind. To change any of these
+   settings you may subclass =Context=. That however will probably not
+   be necessary as =Context= is itself quite customizable. These
+   interworkings are themselves covered by a thin API that provides
+   handy enough decorators and queries for the novice user to be able
+   to ignore all the above and make their own extensions in no time.
+
+** For the faint of heart
+   The API can be thought of as a bus where you may advertise, use or
+   intercept resources. Each component of the system has access to the
+   rest of the components as much as possible through this bus. It
+   gets hold of resources by querying the API and gets integrated
+   by advertizing it's own resources (mostly this will be methods).
+
+   The main advantages of this are:
+
+   - Extensions need not be part of the core of the system but rather
+     to compose separate packages that we may mix and match.
+   - By importing the API a new knowledge base can fit even in a
+     completely independent python script.
+   - Each extension has full access to all resources of the system and
+     may use intercept or override them.
+   - Virtually every part of the system can be subclassed and swapped
+     out without one needing to mess with the core of the system.
+   - A resource like the system's functions can be provided by
+     multiple sources. Thus for example each component can provide
+     functions for the front end to be able to querry it.
+
+   Let's look at a quite simple example:
+
+*** Knowledge Base
+    Knowledge base should provide some of the functions that the front
+    end requires, namely =get=, =get-attributes= and =get-class=. From
+    the default implementation class will probably be derived directly
+    from the infobox title. Then we decide that that we just ask if
+    someone is a person or not and we just want to move that
+    computation to the wikipedia-base (although we could totally do
+    that with a new attribute).
+
+    Write a script that will fire up an instance of the wikipediabase
+    infrastructure and then through the API get a hold of the current
+    implementation of =get-class=, use it in your own implementation
+    and advertize that in place of the original one.

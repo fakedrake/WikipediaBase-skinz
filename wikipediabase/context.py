@@ -17,7 +17,7 @@ class Context(object):
     def get_skin(cls, function=False):
         """
         See if this skin will do. If not create an overlay skin and return
-        it.
+        it. `function` declares wether the skin can handle functions.
         """
 
         if cls._skin is None or (function and not isinstance(cls._skin, FunctionSkin)):
@@ -40,35 +40,28 @@ class Context(object):
 
 
     @classmethod
-    def register_function(cls, fn, name=None, skin=None):
+    def register_function(cls, fn, name=None, domain="functions", skin=None):
         """
-        Register functiion named name under a function skin.
+        Register a function and bind it with a name under a certain domain.
         """
 
         s = skin or cls.get_skin(function=True)
+        s.append(domain, (name or fn.__name__, fn), coll_type=dict)
 
-        s.add_function(fn, name=name)
+    @classmethod
+    def append_function(cls, fn, domain="attributes_generators", skin=None):
+        """
+        Append a function object to a domain.
+        """
 
+        s = skin or cls.get_skin(function=True)
+        s.append(domain, fn)
 
-def wbcall(name, *args, **kwargs):
-    return Context.get_skin(function=True).call(name, *args, **kwargs)
+    @classmethod
+    def set_function(cls, fn, domain="front_end", skin=None):
+        """
+        Set a single method to domain
+        """
 
-def wbregister(fn):
-    """
-    Register this function using its name as name.
-    """
-
-    Context.register_function(fn)
-    return fn
-
-
-def wbregister_named(name):
-    """
-    Decorator to register fuction under name.
-    """
-
-    def real_dec(fn):
-        Context.register_function(fn, name)
-        return fn
-
-    return real_dec
+        s = skin or cls.get_skin(function=True)
+        s.set(domain, fn)
