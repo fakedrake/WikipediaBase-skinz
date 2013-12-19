@@ -37,7 +37,10 @@ def nearby_swearwords(fetcher, article, attribute):
 
     words = _wordlist(article)
     dist = api.get('nearby-word-distance')
-    wl = words.index(attribute)
+    try:
+        wl = words.index(attribute)
+    except ValueError:
+        return None
 
     # It is advised to use the configuration whenever possible
     return api.domaincall("static-attribute-resolvers", "swearwords",
