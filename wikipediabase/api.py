@@ -1,0 +1,108 @@
+"""
+Advertising means registering a function to the 'functions'
+domain. From a user's standpoint in that domain lives a dictionary of
+'name' -> *fn-obj* that is used by the front end to provide functions.
+"""
+
+from context import Context
+from default import DEFAULTS_DOMAIN
+
+import types
+
+def set(domain, value, function=False):
+    Context.get_skin(function=function)[domain] = value
+
+
+def get(domain, function=False):
+    """
+    Get a single piece of data. function needs to be true if you want
+    a callable.
+    """
+
+    return Context.get_skin(function=function)[domain]
+
+def defaults_decorator(fn):
+    """
+    Decorated function will have default args what is in
+    DEFAULTS_DOMAIN of the context.
+    """
+
+    def wrap(*args, **kwargs):
+        # Convert all positional arguments to kwargs
+        argdic = dict(zip(fn.__code__.co_varnames, args))
+        kw = Context.get_skin(function=False).get(DEFAULTS_DOMAIN).copy() or {}
+        kw.update(kwargs)
+        kw.update(argdic)
+
+        return fn(**kw)
+
+    return wrap
+
+@defaults_decorator
+def get_fn(name, domain=None, **kw):
+    """
+    Access functions in a domain.
+    """
+
+    d = Context.get_skin(function=True)[domain or name]
+    try:
+        return d[name]
+    except TypeError:
+        return d
+
+def freecall(name, *args, **kwargs):
+    """
+    Call a function saved in a 'name' domain.
+    """
+
+    return get_fn(name, domain=None)(*args, **kwargs)
+
+
+def call(name, *args, **kwargs):
+    """
+    Call a function from the 'functions' domain.
+    """
+
+    return get_fn(name)(*args, **kwargs)
+
+@defaults_decorator
+def advertise_fn(func, **kwargs):
+    Context.register_function(func, **kwargs)
+    return func
+
+@defaults_decorator
+def advertise(name=None, domain=None, append=None, **kw):
+    """
+    Decorator for advertising functions using their name as key, or
+    provide a name and you may decorate with parameters. Default
+    parameters are in DEFAULT_DOMAIN of context. You may see what
+    params you can pass by looking at `Contex.register_function`.
+
+    Provide domain and not name to put the vanilla function in the slot.
+    """
+
+    def real_dec(fn): return advertise_fn(fn, name=name,
+                                          domain=domain,
+                                          append=append, **kw)
+    return real_dec
+
+def attribute_resolvers():
+    """
+    Get a list of the attribute resolvers available.
+    """
+
+    Context.get_skin(function=True)["resolvers"]
+
+def fetcher():
+    """
+    Get the fetcher.
+    """
+
+    Context.get_skin()["fetcher"]
+
+
+
+def register_named_resolver(name):
+    """
+    Decorator to register fuction under name.
+    """

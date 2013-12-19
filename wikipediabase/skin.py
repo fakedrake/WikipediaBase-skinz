@@ -10,6 +10,17 @@ from functools import reduce
 
 import json
 
+class DictSkinConfig(dict):
+    def __init__(self, *args, **kwargs):
+        super(DictSkinConfig, self).__init__(*args, **kwargs)
+
+    def dump(self, dic):
+        """
+        Dump as json.
+        """
+
+        return json.dumps(dic)
+
 class JsonSkinConfig(object):
     def __init__(self, data=None, filename=None, string=None):
         """

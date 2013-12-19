@@ -49,7 +49,7 @@ class Context(object):
 
 
     @classmethod
-    def register_function(cls, fn, name=None, domain=None, skin=None, append=True, mapping=True):
+    def register_function(cls, fn, name=None, domain=None, skin=None, append=True, mapping=True, **kw):
         """
         Register a function under domain.
 
@@ -64,7 +64,9 @@ class Context(object):
         name = name or fn.__name__
         domain = domain or name
 
-        if append:
+        # XXX: this might not be the place to interpret append == None
+        # as append == True
+        if append or append is None:
             if mapping:
                 s.append(domain, (name, fn), coll_type=dict)
             else:

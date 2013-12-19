@@ -13,20 +13,28 @@ try:
 except ImportError:
     import unittest
 
-from wikipediabase.api import wb_advertise_fn, wb_get_fn, wb_advertise
+import wikipediabase.api as api
 
-@wb_advertise_fn
+# Maybe defining domain should imply append but I will consider it a
+# design descision to leave it like this.
+@api.advertise(domain="test-frontend", append=False)
+def frontend(inp):
+    return inp.split()
+
+@api.advertise()
 def func():
     pass
 
 class Foo(object):
-    @wb_advertise
+    @api.advertise()
     def _member():
         pass
 
-    @wb_advertise("member")
+    # advertise will not deal with staticmethod type fns very well.
+    @staticmethod
+    @api.advertise(name="member")
     def not_member():
-        pass
+        return 2
 
 class TestApi(unittest.TestCase):
 
@@ -38,9 +46,17 @@ class TestApi(unittest.TestCase):
         # to turn it into a staticmethod. But I have no idea what is a
         # class method and what is a function in advance. One way is
         # to have two decorators...
-        self.assertIs(wb_get_fn("_member"), Foo._member.__func__)
-        self.assertIs(wb_get_fn("member"), Foo.not_member.__func__)
-        self.assertIs(wb_get_fn("func"), func)
+        self.assertIs(api.get_fn("_member"), Foo._member.__func__)
+        # Notice how static methods are translated into proper
+        # functions and not unbound.
+        self.assertIs(api.get_fn("member"), Foo.not_member)
+        self.assertIs(api.get_fn("func"), func)
+        self.assertIs(api.get("test-frontend"), frontend)
+
+    def test_calling(self):
+        self.assertEqual(api.call("member"), 2)
+        self.assertEqual(api.freecall("test-frontend", "a string to split"),
+                         ['a', 'string', 'to', 'split'])
 
 
     def tearDown(self):
