@@ -34,6 +34,9 @@ class TestFunctions(unittest.TestCase):
     def test_calling(self):
         self.assertEqual(self.fns.get("addone")(1), 2)
 
+    def test_dump(self):
+        self.assertEqual(self.fns.dump(), '{"addone": ["tests.test_functions", [], "addone"]}')
+
     def tearDown(self):
         pass
 

@@ -217,7 +217,7 @@ class Skin(object):
         data = {}
 
         for k in set(keys):
-            data[k] = Skin.get(self, k)
+            data[k] = Skin.get(self, k, shallow=True)
 
         return self.dumper.dump(data)
 

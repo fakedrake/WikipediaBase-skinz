@@ -69,6 +69,7 @@ class SerialFunction(tuple):
     def __init__(self, serial=None, fn=None):
 
         if fn and type(fn) is types.FunctionType:
+            self.fn = fn
             setattr(fn, 'ad_entry', self)
 
     def deserial(self):
@@ -81,7 +82,8 @@ class SerialFunction(tuple):
         return self.fn
 
     def __repr__(self):
-        return "<SerialFunction object of '%s'>" % repr(self.deserial())
+        mn, op, fn = self
+        return "<SerialFunction object of '%s'>" % fn
 
 
 class FunctionSkin(Skin):
@@ -157,6 +159,6 @@ class FunctionSkin(Skin):
             fn = self._fn_serial(fn)
             val = (key,fn)
         except TypeError:
-            fn = self._fn_serial(val)
+            val = self._fn_serial(val)
 
         return super(FunctionSkin, self).append(attr, val, coll_type)

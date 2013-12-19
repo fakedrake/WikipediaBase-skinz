@@ -59,10 +59,6 @@ class TestApi(unittest.TestCase):
         self.assertEqual(api.freecall("test-frontend", "a string to split"),
                          ['a', 'string', 'to', 'split'])
 
-    def test_dumping(self):
-         self.assertEqual(api.jsondump(),JSON_DUMP)
-
-
     def tearDown(self):
         pass
 
