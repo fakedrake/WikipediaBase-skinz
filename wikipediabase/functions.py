@@ -3,12 +3,60 @@ import types
 
 from wikipediabase.skin import Skin
 
-class SerialFunction(object):
+
+def _serial(fn):
     """
-    This is a serializable/deserializable function.
+    Return a tuple that one can turn into this function
     """
 
-    def __init__(self, serial=None, fn=None):
+    return (fn.__module__, _fn_objpath(fn), fn.__name__)
+
+def _fn_objpath(fn):
+
+    if hasattr(fn, 'ad_objpath'):
+        return fn.ad_objpath
+
+    return []
+
+class MetaAdvert(type):
+    """
+    Add an ad_class attribute to functions so the Skin can find them.
+    """
+
+    def __new__(meta, clsname, bases, clsDict):
+        """
+        Add the class name to the registered functions so that they are
+        locatable and also turn registered methods into static
+        methods.
+        """
+
+        statix = {}
+
+        for k, v in clsDict.iteritems():
+            if hasattr(v, '__func__'):
+                v = v.__func__
+            elif type(v) is types.FunctionType and hasattr(v, 'ad_entry'):
+                statix[k] = staticmethod(v)
+
+            if hasattr(v, "__call__"):
+                setattr(v, 'ad_objpath', [clsname])
+
+            # If a serial function was created for this fix it.
+            if hasattr(v, 'ad_entry'):
+                m, obp, n = v.ad_entry
+                obp.append(clsname)
+
+        clsDict.update(statix)
+        return type.__new__(meta, clsname, bases, clsDict)
+
+
+class SerialFunction(tuple):
+    """
+    This is a serializable/deserializable function. It is also a list
+    so it can be serialized.
+    """
+
+    def __new__(cls, serial=None, fn=None):
         """
         Create a serialfunc from a tuple or a string.
         """
@@ -16,37 +64,21 @@ class SerialFunction(object):
         if not hasattr(fn, '__call__'):
             raise TypeError("SerialFunction can be created only for callables.")
 
-        self.tup = serial
-        self.fn = fn
+        return super(SerialFunction, cls).__new__(cls, tuple(serial or _serial(fn)))
 
+    def __init__(self, serial=None, fn=None):
 
-    def _fn_class(self):
-        try:
-            return self.fn.im_class.__name__
-        except AttributeError:
-            return None
-
-    def serial(self):
-        """
-        Return a tuple that one can turn into this function
-        """
-
-        if self.fn:
-            self.tup = self.fn.__module__, self._fn_class(), self.fn.__name__
-
-        return self.tup
+        if fn and type(fn) is types.FunctionType:
+            setattr(fn, 'ad_entry', self)
 
     def deserial(self):
-        if self.tup:
-            mn, cn, fn = self.tup
+        if not hasattr(self, "fn"):
+            mn, op, fn = self
             m = importlib.import_module(mn)
-            c = cn and getattr(m, cn) or m
+            c = reduce(lambda m,on: getattr(m, on), op, m) # Walk the object path
             self.fn = getattr(c, fn)
 
         return self.fn
-
-    def __str__(self):
-        return str(self.serial())
 
     def __repr__(self):
         return "<SerialFunction object of '%s'>" % repr(self.deserial())
@@ -68,12 +100,16 @@ class FunctionSkin(Skin):
 
         super(FunctionSkin, self).__init__(*args, **kwargs)
 
-    def get(self, name):
+    def get(self, name, shallow=False, **kw):
         """
-        Call function given by name wnith arguments.
+        Call function given by name wnith arguments. Shallow means dont do
+        any processing on the data before returning it.
         """
 
-        val = super(FunctionSkin, self).get(name)
+        val = super(FunctionSkin, self).get(name, shallow=shallow, **kw)
+
+        if shallow:
+            return val
 
         if type(val) is dict:
             return dict([(n,self._fn_deserial(f)) for n, f in val.items()])
@@ -88,10 +124,12 @@ class FunctionSkin(Skin):
         even match the
         """
 
-        try:
+        if isinstance(fun, SerialFunction):
             return fun.deserial()
-        except AttributeError:
-            return fun
+        elif hasattr(fun, '__iter__') and len(fun) == 3: # It is a tuple
+            return SerialFunction(serail=fun).deserial()
+
+        return fun
 
     def _fn_serial(self, fn):
         """
@@ -101,10 +139,7 @@ class FunctionSkin(Skin):
         if isinstance(fn, SerialFunction):
             return fn
 
-        try:
-            return SerialFunction(fn=fn)
-        except TypeError:
-            return fn
+        return SerialFunction(fn=fn)
 
     def set(self, attr, val, depth=0):
         """

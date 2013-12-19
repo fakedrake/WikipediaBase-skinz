@@ -89,7 +89,7 @@ class Skin(object):
         self.parent_skin = parent
         self.dumper = dumper or self.config
 
-    def get(self, attr, parent=True, local=True, config=True, append=True):
+    def get(self, attr, parent=True, local=True, config=True, append=True, **kw):
         """
         Resolve the value of attr. Look in local storage (programmatically
         created) then in loaded configuration (from file possibly) and
@@ -97,11 +97,12 @@ class Skin(object):
         of the above lookups with the corresponding attrubute.
 
         If an attribute is of type list or dict and append is True
-        then I will concatenate all the values I find.
+        then I will concatenate all the values I find. Shallow tells
+        me to not do any processing.
         """
 
         ret = None
-        sources = self._available_sources()
+        sources = self._available_sources(parent, local, config)
 
         for s in sources:
             # Assume attribute types are consistent
@@ -124,7 +125,7 @@ class Skin(object):
                    parent and self.parent_skin)
                   if i]
 
-    def append(self, attr, val, coll_type=list):
+    def append(self, attr, val, coll_type=list, **kw):
         """
         Append the attribute to the value. This only affects local
         configuration. Append will assume val is supposed to be an
@@ -134,7 +135,10 @@ class Skin(object):
         Also note that this is more of a 'push' than an append.
         """
 
-        cv = self.get(attr)
+        # Skin subclasses may or may not process their data. Shallow
+        # tells them we are not actually interested in the actual
+        # values.
+        cv = self.get(attr, shallow=True)
 
         # Make a val of the correct type
         try:
@@ -154,7 +158,7 @@ class Skin(object):
             self.local = {attr: rval}
 
 
-    def set(self, attr, val, depth=0):
+    def set(self, attr, val, depth=0, **kw):
         """
         Set the value for the programmatic interface. Depth show how deep
         in the parent skins to set it. Use `append` to populate list
@@ -213,7 +217,7 @@ class Skin(object):
         data = {}
 
         for k in set(keys):
-            data[k] = self.get(k)
+            data[k] = Skin.get(self, k)
 
         return self.dumper.dump(data)
 

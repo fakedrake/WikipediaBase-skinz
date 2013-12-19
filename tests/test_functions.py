@@ -24,8 +24,11 @@ class TestFunctions(unittest.TestCase):
         self.fns = functions.FunctionSkin()
         self.fns.set('addone', addone)
 
+    def test_serialfn(self):
+        self.assertEqual(tuple(functions.SerialFunction(fn=addone)), ('tests.test_functions', [], 'addone'))
+
     def test_addition(self):
-        self.assertEqual(str(skin.Skin.get(self.fns, "addone")), "('tests.test_functions', None, 'addone')")
+        self.assertEqual(tuple(skin.Skin.get(self.fns, "addone")), ('tests.test_functions', [], 'addone'))
         self.assertIs(self.fns['addone'], addone)
 
     def test_calling(self):

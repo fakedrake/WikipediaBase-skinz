@@ -6,6 +6,7 @@ domain. From a user's standpoint in that domain lives a dictionary of
 
 from context import Context
 from default import DEFAULTS_DOMAIN
+from functions import MetaAdvert
 
 import types
 
@@ -30,7 +31,7 @@ def defaults_decorator(fn):
     def wrap(*args, **kwargs):
         # Convert all positional arguments to kwargs
         argdic = dict(zip(fn.__code__.co_varnames, args))
-        kw = Context.get_skin(function=False).get(DEFAULTS_DOMAIN).copy() or {}
+        kw = (Context.get_skin(function=False).get(DEFAULTS_DOMAIN) or {}).copy()
         kw.update(kwargs)
         kw.update(argdic)
 
@@ -73,18 +74,26 @@ def advertise_fn(func, **kwargs):
 @defaults_decorator
 def advertise(name=None, domain=None, append=None, **kw):
     """
+    To decorate methods of a class it needs to subclass
+    `Advertisable`. Also this decorator implies `@staticmethod`.
+
     Decorator for advertising functions using their name as key, or
     provide a name and you may decorate with parameters. Default
     parameters are in DEFAULT_DOMAIN of context. You may see what
     params you can pass by looking at `Contex.register_function`.
 
-    Provide domain and not name to put the vanilla function in the slot.
+    Provide domain and not name to put the vanilla function in the
+    slot.
     """
 
     def real_dec(fn): return advertise_fn(fn, name=name,
                                           domain=domain,
                                           append=append, **kw)
     return real_dec
+
+def jsondump():
+    return Context.get_skin(function=False).dump()
+
 
 def attribute_resolvers():
     """
@@ -93,16 +102,10 @@ def attribute_resolvers():
 
     Context.get_skin(function=True)["resolvers"]
 
-def fetcher():
+
+class Advertisable(object):
     """
-    Get the fetcher.
+    Subclassing this will give make your methods advertisable.
     """
 
-    Context.get_skin()["fetcher"]
-
-
-
-def register_named_resolver(name):
-    """
-    Decorator to register fuction under name.
-    """
+    __metaclass__ = MetaAdvert

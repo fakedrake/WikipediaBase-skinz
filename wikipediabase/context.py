@@ -14,6 +14,13 @@ class Context(object):
     _skin = None
 
     @classmethod
+    def skins(cls):
+        s = cls._skin
+        while s:
+            s = s.parent_skin
+            yield s
+
+    @classmethod
     def get_skin(cls, function=False):
         """
         See if this skin will do. If not create an overlay skin and return
@@ -23,10 +30,10 @@ class Context(object):
           functions. Will overlay a new one.
         """
 
-        iscorrect = function and isinstance(cls._skin, FunctionSkin) or \
+        need_skin = function and not isinstance(cls._skin, FunctionSkin) or \
                     cls._skin is None
 
-        if iscorrect:
+        if need_skin:
             cls.set_skin(function and FunctionSkin() or Skin())
 
         return cls._skin

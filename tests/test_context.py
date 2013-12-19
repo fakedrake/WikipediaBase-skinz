@@ -13,6 +13,7 @@ try:
 except ImportError:
     import unittest
 
+from wikipediabase.functions import FunctionSkin
 from wikipediabase.context import Context
 
 def addone(x):
@@ -21,13 +22,18 @@ def addone(x):
 class TestContext(unittest.TestCase):
 
     def setUp(self):
-        Context.register_function(addone)
+        self.s = Context._skin
+        Context._skin = None
 
-    def test_regdec(self):
-        self.assertEqual(2, 2)
+    def test_skin_generation(self):
+        self.sn = len(list(Context.skins()))
+        self.assertTrue(isinstance(Context.get_skin(function=True), FunctionSkin))
+        self.assertTrue(isinstance(Context._skin, FunctionSkin))
+        self.assertEqual(len(list(Context.skins())), self.sn+1)
+
 
     def tearDown(self):
-        pass
+        Context._skin = self.s
 
 if __name__ == '__main__':
     unittest.main()

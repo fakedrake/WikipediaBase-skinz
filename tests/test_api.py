@@ -15,6 +15,8 @@ except ImportError:
 
 import wikipediabase.api as api
 
+JSON_DUMP = '{"test-frontend": ["tests.test_api", [], "frontend"], "default_kwargs": {"domain": "functions", "mapping": true, "append": null}, "functions": {"member": ["tests.test_api", ["Foo"], "not_member"], "mysplit": ["tests.test_text_frontend", [], "mysplit"], "_member": ["tests.test_api", ["Foo"], "_member"], "func": ["tests.test_api", [], "func"]}, "frontend": ["wikipediabase.text_frontend", [], "text_frontend"]}'
+
 # Maybe defining domain should imply append but I will consider it a
 # design descision to leave it like this.
 @api.advertise(domain="test-frontend", append=False)
@@ -25,13 +27,12 @@ def frontend(inp):
 def func():
     pass
 
-class Foo(object):
+class Foo(api.Advertisable):
     @api.advertise()
     def _member():
         pass
 
     # advertise will not deal with staticmethod type fns very well.
-    @staticmethod
     @api.advertise(name="member")
     def not_member():
         return 2
@@ -46,7 +47,7 @@ class TestApi(unittest.TestCase):
         # to turn it into a staticmethod. But I have no idea what is a
         # class method and what is a function in advance. One way is
         # to have two decorators...
-        self.assertIs(api.get_fn("_member"), Foo._member.__func__)
+        self.assertIs(api.get_fn("_member"), Foo._member)
         # Notice how static methods are translated into proper
         # functions and not unbound.
         self.assertIs(api.get_fn("member"), Foo.not_member)
@@ -57,6 +58,9 @@ class TestApi(unittest.TestCase):
         self.assertEqual(api.call("member"), 2)
         self.assertEqual(api.freecall("test-frontend", "a string to split"),
                          ['a', 'string', 'to', 'split'])
+
+    def test_dumping(self):
+         self.assertEqual(api.jsondump(),JSON_DUMP)
 
 
     def tearDown(self):
