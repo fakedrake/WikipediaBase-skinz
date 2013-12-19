@@ -7,6 +7,7 @@ domain. From a user's standpoint in that domain lives a dictionary of
 from context import Context
 from default import DEFAULTS_DOMAIN
 from functions import MetaAdvert
+from skin import Skin, DictSkinConfig
 
 import types
 
@@ -14,13 +15,16 @@ def set(domain, value, function=False):
     Context.get_skin(function=function)[domain] = value
 
 
-def get(domain, function=False):
+def get(domain, function=False, **kwargs):
     """
     Get a single piece of data. function needs to be true if you want
     a callable.
     """
 
-    return Context.get_skin(function=function)[domain]
+    return Context.get_skin(function=function).get(domain, **kwargs)
+
+def append(domain, value, function=False, **kwargs):
+    return Context.get_skin(function=function).append(domain, value, **kwargs)
 
 def defaults_decorator(fn):
     """
@@ -50,6 +54,16 @@ def get_fn(name, domain=None, **kw):
         return d[name]
     except TypeError:
         return d
+
+def setdict(dic):
+    """
+    Creates a new skin with config dict.
+    """
+
+    Context.set_skin(Skin(DictSkinConfig(dic)))
+
+def domaincall(domain, name, *args, **kwargs):
+    return get_fn(name, domain=domain)(*args, **kwargs)
 
 def freecall(name, *args, **kwargs):
     """

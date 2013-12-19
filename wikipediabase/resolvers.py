@@ -11,6 +11,48 @@ Context like a dictionary of functions in the domain
 
 
 import api
+import re
+
+def _wordlist(txt):
+    return re.findall('\w+', txt.lower())
+
+def _is_swearword(w):
+    swearwordsrx = api.get('swearwords')
+    word = w.lower()
+    for sw in swearwordsrx:
+        if re.match(sw, word):
+            return True
+
+    return False
+
+# Append dictionary too the context
+api.setdict({"swearwords":['fuck\w*', 'shit\w*'], 'nearby-word-distance': 3})
+
+@api.advertise(mapping=False, domain="attribute-resolvers")
+def nearby_swearwords(fetcher, article, attribute):
+    """
+    Get nearby swearwords from attribute. Check the context for a list
+    of swearword regexps.
+    """
+
+    words = _wordlist(article)
+    dist = api.get('nearby-word-distance')
+    wl = words.index(attribute)
+
+    # It is advised to use the configuration whenever possible
+    return api.domaincall("static-attribute-resolvers", "swearwords",
+                          words[max(0,wl-dist) : min(wl+dist, len(words))])
+
+
+@api.advertise(domain="static-attribute-resolvers", name="swearwords")
+def swearwords(article):
+    """
+    Get all article swearwords.
+    """
+
+    words = isinstance(article, str) and _wordlist(article) or article
+    return filter(_is_swearword, words)
+
 
 @api.advertise(domain="static-attribute-resolvers", name="yomama")
 def yomama(article):
@@ -45,5 +87,5 @@ def resolve_attribute(article, attr):
     resolvers = api.get("attribute-resolvers", function=True)
     for r in resolvers:
         val = r(None, article, attr)
-        if val:
+        if val is not None:
             return val

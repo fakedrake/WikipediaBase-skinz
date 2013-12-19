@@ -138,7 +138,7 @@ class FunctionSkin(Skin):
         Maybe serialize function. If not function just return the value.
         """
 
-        if isinstance(fn, SerialFunction):
+        if not hasattr(fn, '__call__'):
             return fn
 
         return SerialFunction(fn=fn)
@@ -154,11 +154,11 @@ class FunctionSkin(Skin):
 
     def append(self, attr, val, coll_type=list):
         key = None
-        try:
+        if type(val) is tuple:
             key, fn = val
             fn = self._fn_serial(fn)
             val = (key,fn)
-        except TypeError:
+        else:
             val = self._fn_serial(val)
 
         return super(FunctionSkin, self).append(attr, val, coll_type)
